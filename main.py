@@ -35,7 +35,7 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
     return target_qs # [bs, num_actions]
 
 def do_run():
-    num_tasks = 2
+    num_tasks = 100
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 100
@@ -62,10 +62,9 @@ def do_run():
             target_qs = build_target_q_batch(tables, states, tasks, env)
             preped_states = [prepare_state_for_dqn(state) for state in states]
             loss = dqn.train(preped_states, tasks, target_qs)
-            print(loss)
+            print(i, loss)
 
         if i % save_interval == 0:
-            print('Saving...')
             dqn.save(dqn_path)
 
 if __name__ == '__main__':
