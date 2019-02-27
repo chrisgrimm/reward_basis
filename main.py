@@ -8,6 +8,7 @@ import os
 from gym import Env
 from typing import List
 from tabular_q_learner import TabularQLearner
+from multiprocessing import Pool, cpu_count
 
 state_buffer = deque(maxlen=100000)
 
@@ -21,10 +22,23 @@ def task_sort_key(task_name):
     collected_stuff = [int(c) for c in task_name]
     return (len(collected_stuff), sum(collected_stuff))
 
+def async_load_q_tables(env, path_list):
+    pool = Pool(processes=cpu_count())
+    q_tables = []
+    for path in path_list:
+        res = pool.apply_async(load_q_table, (env, path))
+        q_tables.append(res)
+    q_tables = [res.get() for res in q_tables]
+    pool.close()
+    pool.join()
+    return q_tables
+
+
 def load_q_table(env: TabularEnv, path : str):
     print(f'loading table for {path}...')
     learner = TabularQLearner(env.produce_q_table(), env.action_space.n)
     learner.restore_q_values(path)
+    print(f'finished loading {path}!')
     return learner
 
 def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env):
@@ -48,7 +62,8 @@ def do_run():
     assert len(task_names) == num_tasks
 
     env = StuffWorld()
-    tables = [load_q_table(env, os.path.join(q_func_dir, task_name)) for task_name in task_names]
+    paths = [os.path.join(q_func_dir, task_name) for task_name in task_names]
+    tables = async_load_q_tables(env, paths)
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
     env.reset()
 
