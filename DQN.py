@@ -10,7 +10,7 @@ class Multi_DQN:
         self.action_size = action_size = env.action_space.n
         self.inp_s = tf.placeholder(tf.float32, [None, obs_size])
         self.inp_target_q = tf.placeholder(tf.float32, [None, action_size])
-        self.inp_task_indicator = tf.placeholder(tf.float32, [None])
+        self.inp_task_indicator = tf.placeholder(tf.int32, [None])
         self.inp_w = tf.placeholder(tf.float32, [None, num_dqns])
         inp_task_indicator_onehot = tf.one_hot(self.inp_task_indicator, num_tasks)
         lmbda = 0.1
