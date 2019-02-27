@@ -66,8 +66,8 @@ def visualize_behavior(task_num):
     while True:
         a = env.human_mapping[input('a:')]
         dqn.get_action([s], w)[0]
-        print(tabular_agent.get_Qs(s))
-        #a = tabular_agent.act(s)
+        #print(tabular_agent.get_Qs(s))
+        a = tabular_agent.act(s)
         #print(a)
         s, _, _, _ = env.step(a)
         print(env.visual())
@@ -108,7 +108,7 @@ def do_run():
             states = sample(state_buffer, 32)
             tasks = np.random.randint(0, num_tasks, size=[32])
             target_qs = build_target_q_batch(tables, states, tasks, env)
-            print(target_qs)
+            #print(target_qs)
             preped_states = [prepare_state_for_dqn(state) for state in states]
             loss = dqn.train(preped_states, tasks, target_qs)
             print(i, loss)
