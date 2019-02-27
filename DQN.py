@@ -28,7 +28,7 @@ class Multi_DQN:
             reg = tf.reduce_mean(tf.square(selected_w))
             self.loss = loss = loss + lmbda * reg
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
-            self.train_op = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(loss, var_list=vars)
+            self.train_op = tf.train.AdamOptimizer(learning_rate=0.00005).minimize(loss, var_list=vars)
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
 
             self.saver = tf.train.Saver(var_list=vars)

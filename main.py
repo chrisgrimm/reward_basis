@@ -117,10 +117,10 @@ def do_run():
             dqn.save(dqn_path)
 
 if __name__ == '__main__':
-    #do_run()
+    do_run()
     #w = np.zeros([10])
     #w[1] = -1.0
     #q_func_dir = './q_funcs'
     #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     #print(task_names[:100])
-    visualize_behavior(3)
+    #visualize_behavior(3)
