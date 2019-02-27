@@ -1,7 +1,14 @@
 import numpy as np
 import itertools
 from gym.spaces import Box, Discrete
-class StuffWorld(object):
+from gym import Env
+
+class TabularEnv(Env):
+
+    def produce_q_table(self):
+        raise NotImplemented
+
+class StuffWorld(TabularEnv):
 
     def __init__(self):
         self.height = 10
@@ -37,6 +44,7 @@ class StuffWorld(object):
 
         self.remaining = self.goal_set.copy()
         self.action_space = Discrete(4)
+        self.observation_space = Box(0, 1, shape=[self.width*self.height + 2])
 
     def pair_to_idx(self, x, y):
         return y * self.height + x
