@@ -50,8 +50,8 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
 
 def visualize_behavior(task_num):
     env = StuffWorld()
-    tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
-    tabular_agent.restore_q_values('./q_funcs/2')
+    #tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
+    #tabular_agent.restore_q_values('./q_funcs/2')
 
     env.set_goal_set(set(range(10)))
     dqn = Multi_DQN(100, 10, env, 'multi_dqn')
@@ -62,12 +62,12 @@ def visualize_behavior(task_num):
     #    print(f'task {i}', W[:, i])
     w = W[:,task_num]
     s = env.reset()
-    print(env.visual())
+    #print(env.visual())
     while True:
-        a = env.human_mapping[input('a:')]
-        dqn.get_action([s], w)[0]
+        #a = env.human_mapping[input('a:')]
+        a = dqn.get_action([s], w)[0]
         #print(tabular_agent.get_Qs(s))
-        a = tabular_agent.act(s)
+        #a = tabular_agent.act(s)
         #print(a)
         s, _, _, _ = env.step(a)
         print(env.visual())
@@ -117,10 +117,10 @@ def do_run():
             dqn.save(dqn_path)
 
 if __name__ == '__main__':
-    do_run()
+    #do_run()
     #w = np.zeros([10])
     #w[1] = -1.0
     #q_func_dir = './q_funcs'
     #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     #print(task_names[:100])
-    #visualize_behavior(1)
+    visualize_behavior(3)
