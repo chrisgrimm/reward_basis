@@ -49,7 +49,7 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
     return target_qs # [bs, num_actions]
 
 def do_run():
-    num_tasks = 10
+    num_tasks = 100
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 100
