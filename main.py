@@ -78,7 +78,7 @@ def sample_goal_set():
 
 def do_run():
 
-    num_tasks = 2
+    num_tasks = 100
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 100
