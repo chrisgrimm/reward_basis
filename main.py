@@ -48,8 +48,34 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
         target_qs.append(target_q)
     return target_qs # [bs, num_actions]
 
+def visualize_behavior(task_num):
+    env = StuffWorld()
+    tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
+    tabular_agent.restore_q_values('./q_funcs/0')
+
+    env.set_goal_set(set(range(10)))
+    dqn = Multi_DQN(100, 10, env, 'multi_dqn')
+    dqn.restore('./multi_dqn.ckpt')
+
+    W = dqn.get_w()
+    #for i in range(100):
+    #    print(f'task {i}', W[:, i])
+    w = W[:,task_num]
+
+    s = env.reset()
+    print(env.visual())
+    while True:
+        dqn.get_action([s], w)[0]
+        print(tabular_agent.get_Qs(s))
+        a = tabular_agent.act(s)
+        print(a)
+        s, _, _, _ = env.step(a)
+        print(env.visual())
+        input('------')
+
+
 def do_run():
-    num_tasks = 100
+    num_tasks = 2
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 100
@@ -85,3 +111,9 @@ def do_run():
 
 if __name__ == '__main__':
     do_run()
+    #w = np.zeros([10])
+    #w[1] = -1.0
+    #q_func_dir = './q_funcs'
+    #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
+    #print(task_names[:100])
+    visualize_behavior(1)

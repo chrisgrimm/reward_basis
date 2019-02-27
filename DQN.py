@@ -20,7 +20,7 @@ class Multi_DQN:
             all_Q = [self.build_network(f'qnet{i}') for i in range(num_dqns)] # [num_dqns, bs, num_actions]
             all_Q = tf.transpose(all_Q, [1,0,2]) # [bs, num_dqns, num_actions]
             self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1])
-            w = tf.get_variable('w', shape=[num_dqns, num_tasks])
+            self.w = w = tf.get_variable('w', shape=[num_dqns, num_tasks])
             pre_selection = tf.reshape(w, [1, num_dqns, num_tasks]) * tf.reshape(inp_task_indicator_onehot, [-1, 1, num_tasks]) # [bs, num_dqns, num_tasks]
             selected_w = tf.reduce_sum(pre_selection, axis=2) # [bs, num_dqns]
             selected_Q_tildes = tf.reduce_sum(tf.reshape(selected_w, [-1, num_dqns, 1]) * all_Q, axis=1) # [bs, num_actions]
@@ -38,6 +38,9 @@ class Multi_DQN:
             self.sess = tf.Session(config=config)
             self.sess.run(tf.variables_initializer(vars))
 
+    def get_w(self):
+        return self.sess.run(self.w)
+
     def save(self, path):
         print(path)
         self.saver.save(self.sess, path)
@@ -47,10 +50,12 @@ class Multi_DQN:
 
 
     def get_action(self, states, w):
-        qs = self.sess.run([self.Q_tilde_w], feed_dict={
+
+        [qs] = self.sess.run([self.Q_tilde_w], feed_dict={
             self.inp_s: states,
             self.inp_w: np.tile(np.reshape(w, [1, -1]), [len(states), 1])
         })
+        print('qs', qs)
         return np.argmax(qs, axis=1)
 
     def train(self, states, task_nums, target_qs):

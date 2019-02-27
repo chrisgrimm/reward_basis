@@ -39,6 +39,8 @@ class TabularQLearner():
         #if q != 0:
         #    print(q)
 
+    def get_Qs(self, s):
+        return [self.Q[(s,a)] for a in range(self.num_actions)]
 
     def act(self, s):
         return max([(i, self.Q[(s, i)]) for i in range(self.num_actions)],key=lambda x: x[1])[0]
