@@ -63,7 +63,8 @@ def do_run():
 
     env = StuffWorld()
     paths = [os.path.join(q_func_dir, task_name) for task_name in task_names]
-    tables = async_load_q_tables(env, paths)
+    #tables = async_load_q_tables(env, paths)
+    tables = [load_q_table(env, path) for path in paths]
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
     env.reset()
 
