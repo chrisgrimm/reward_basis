@@ -60,3 +60,5 @@ def do_run():
             loss = dqn.train(states, tasks, target_qs)
             print(loss)
 
+if __name__ == '__main__':
+    do_run()
