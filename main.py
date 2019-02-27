@@ -60,7 +60,8 @@ def do_run():
             states = sample(state_buffer, 32)
             tasks = np.random.randint(0, num_tasks, size=[32])
             target_qs = build_target_q_batch(tables, states, tasks, env)
-            loss = dqn.train(states, tasks, target_qs)
+            preped_states = [prepare_state_for_dqn(state) for state in states]
+            loss = dqn.train(preped_states, tasks, target_qs)
             print(loss)
 
         if i % save_interval == 0:
