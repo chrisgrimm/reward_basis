@@ -51,7 +51,7 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
 def visualize_behavior(task_num):
     env = StuffWorld()
     tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
-    tabular_agent.restore_q_values('./q_funcs/0')
+    tabular_agent.restore_q_values('./q_funcs/2')
 
     env.set_goal_set(set(range(10)))
     dqn = Multi_DQN(100, 10, env, 'multi_dqn')
@@ -61,20 +61,23 @@ def visualize_behavior(task_num):
     #for i in range(100):
     #    print(f'task {i}', W[:, i])
     w = W[:,task_num]
-
     s = env.reset()
     print(env.visual())
     while True:
+        a = env.human_mapping[input('a:')]
         dqn.get_action([s], w)[0]
         print(tabular_agent.get_Qs(s))
-        a = tabular_agent.act(s)
-        print(a)
+        #a = tabular_agent.act(s)
+        #print(a)
         s, _, _, _ = env.step(a)
         print(env.visual())
         input('------')
 
+def sample_goal_set():
+    return set([x for x in range(10) if np.random.uniform() < 0.5])
 
 def do_run():
+
     num_tasks = 2
     num_dqns = 10
     train_freq = 4
@@ -97,6 +100,9 @@ def do_run():
     for i in count():
         a = np.random.randint(0, env.action_space.n)
         s, r, t, info = env.step(a)
+        if t:
+            env.set_goal_set(sample_goal_set())
+            s = env.reset()
         state_buffer.append(s)
         if len(state_buffer) >= min_buffer_size and i % train_freq == 0:
             states = sample(state_buffer, 32)
@@ -117,4 +123,4 @@ if __name__ == '__main__':
     #q_func_dir = './q_funcs'
     #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     #print(task_names[:100])
-    visualize_behavior(1)
+    #visualize_behavior(1)

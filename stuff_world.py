@@ -39,6 +39,12 @@ class StuffWorld(TabularEnv):
             2: (0,-1),
             3: (0,1)
         }
+        self.human_mapping = {
+            'a': 0,
+            'd': 1,
+            'w': 2,
+            's': 3
+        }
 
         self.goal_set = set([0])
 
