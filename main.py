@@ -39,6 +39,8 @@ def do_run():
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 100
+    save_interval = 100000
+    dqn_path = 'multi_dqn.ckpt'
     q_func_dir = './q_funcs'
     task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     task_names = task_names[:num_tasks]
@@ -60,6 +62,10 @@ def do_run():
             target_qs = build_target_q_batch(tables, states, tasks, env)
             loss = dqn.train(states, tasks, target_qs)
             print(loss)
+
+        if i % save_interval == 0:
+            print('Saving...')
+            dqn.save(dqn_path)
 
 if __name__ == '__main__':
     do_run()

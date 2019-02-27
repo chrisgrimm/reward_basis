@@ -31,10 +31,19 @@ class Multi_DQN:
             self.train_op = tf.train.AdamOptimizer(learning_rate=0.0001).minimize(loss, var_list=vars)
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
 
+            self.saver = tf.train.Saver(var_list=vars)
+
             config = tf.ConfigProto(allow_soft_placement=True)
             config.gpu_options.allow_growth = True
             self.sess = tf.Session(config=config)
             self.sess.run(tf.variables_initializer(vars))
+
+    def save(self, path):
+        self.saver.save(self.sess, path)
+
+    def restore(self, path):
+        self.saver.restore(self.sess, path)
+
 
     def get_action(self, states, w):
         qs = self.sess.run([self.Q_tilde_w], feed_dict={
