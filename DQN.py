@@ -39,6 +39,7 @@ class Multi_DQN:
             self.sess.run(tf.variables_initializer(vars))
 
     def save(self, path):
+        print(path)
         self.saver.save(self.sess, path)
 
     def restore(self, path):

@@ -40,7 +40,7 @@ def do_run():
     train_freq = 4
     min_buffer_size = 100
     save_interval = 100000
-    dqn_path = 'multi_dqn.ckpt'
+    dqn_path = './multi_dqn.ckpt'
     q_func_dir = './q_funcs'
     task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     task_names = task_names[:num_tasks]
