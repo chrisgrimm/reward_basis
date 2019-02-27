@@ -29,7 +29,7 @@ def load_q_table(env: TabularEnv, path : str):
 
 def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env):
     target_qs = []
-    for task, state in zip(states, tasks):
+    for state, task in zip(states, tasks):
         target_q = [tables[task].Q[(state,a)] for a in range(env.action_space.n)]
         target_qs.append(target_q)
     return target_qs # [bs, num_actions]
