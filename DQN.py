@@ -17,7 +17,7 @@ class Multi_DQN:
         #bs = tf.shape(self.inp_task_indicator)[0]
 
         with tf.variable_scope(name, reuse=reuse) as scope:
-            all_Q = [self.build_network(f'qnet{i}', reuse=i>0) for i in range(num_dqns)] # [num_dqns, bs, num_actions]
+            all_Q = [self.build_network(f'qnet{i}') for i in range(num_dqns)] # [num_dqns, bs, num_actions]
             all_Q = tf.transpose(all_Q, [1,0,2]) # [bs, num_dqns, num_actions]
             self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1])
             w = tf.get_variable('w', shape=[num_dqns, num_tasks])
