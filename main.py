@@ -22,6 +22,7 @@ def task_sort_key(task_name):
     return (len(collected_stuff), sum(collected_stuff))
 
 def load_q_table(env: TabularEnv, path : str):
+    print(f'loading table for {path}...')
     learner = TabularQLearner(env.produce_q_table(), env.action_space.n)
     learner.restore_q_values(path)
     return learner
@@ -34,7 +35,7 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
     return target_qs # [bs, num_actions]
 
 def do_run():
-    num_tasks = 20
+    num_tasks = 2
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 100
