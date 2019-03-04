@@ -12,14 +12,14 @@ class Multi_DQN:
         self.inp_target_q = tf.placeholder(tf.float32, [None, action_size])
         self.inp_task_indicator = tf.placeholder(tf.int32, [None])
         self.inp_w = tf.placeholder(tf.float32, [None, num_dqns])
-        inp_task_indicator_onehot = tf.one_hot(self.inp_task_indicator, num_tasks)
+        inp_task_indicator_onehot = tf.one_hot(self.inp_task_indicator, num_tasks) #[bs, num_tasks]
         lmbda = 0.1
         #bs = tf.shape(self.inp_task_indicator)[0]
 
         with tf.variable_scope(name, reuse=reuse) as scope:
             all_Q = [self.build_network(f'qnet{i}') for i in range(num_dqns)] # [num_dqns, bs, num_actions]
             all_Q = tf.transpose(all_Q, [1,0,2]) # [bs, num_dqns, num_actions]
-            self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1])
+            self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1]) # [bs, num_actions]
             self.w = w = tf.get_variable('w', shape=[num_dqns, num_tasks])
             pre_selection = tf.reshape(w, [1, num_dqns, num_tasks]) * tf.reshape(inp_task_indicator_onehot, [-1, 1, num_tasks]) # [bs, num_dqns, num_tasks]
             selected_w = tf.reduce_sum(pre_selection, axis=2) # [bs, num_dqns]
@@ -28,7 +28,7 @@ class Multi_DQN:
             reg = tf.reduce_mean(tf.square(selected_w))
             self.loss = loss = loss + lmbda * reg
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
-            self.train_op = tf.train.AdamOptimizer(learning_rate=0.00005).minimize(loss, var_list=vars)
+            self.train_op = tf.train.AdamOptimizer(learning_rate=0.00025).minimize(loss, var_list=vars)
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
 
             self.saver = tf.train.Saver(var_list=vars)
