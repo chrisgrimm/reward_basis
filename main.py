@@ -118,7 +118,7 @@ def do_run():
     for i in count():
         if np.random.uniform() < 0.8:
             #print(tables[0].get_Qs(s))
-            a = np.argmax(tables[0].get_Qs(s))
+            a = np.argmax(tables[current_goal_num].get_Qs(s))
             #print(a)
         else:
             a = np.random.randint(0, env.action_space.n)
