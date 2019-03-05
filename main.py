@@ -112,7 +112,6 @@ def do_run():
     #tables = async_load_q_tables(env, paths)
     tables = [load_q_table(env, path) for path in paths]
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
-    dqn.restore('./multi_dqn.ckpt')
     s = env.reset()
 
     for i in count():
