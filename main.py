@@ -131,6 +131,7 @@ def do_run():
         if len(state_buffer) >= min_buffer_size and i % train_freq == 0:
             states_and_tasks = sample(state_buffer, 32)
             states, tasks = zip(*states_and_tasks)
+            print(tasks)
             #tasks = np.random.randint(0, num_tasks, size=[32])
             target_qs = build_target_q_batch(tables, states, tasks, env)
             #print(target_qs)
