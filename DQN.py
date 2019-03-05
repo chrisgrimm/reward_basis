@@ -12,6 +12,7 @@ class Multi_DQN:
         self.inp_target_q = tf.placeholder(tf.float32, [None, action_size])
         self.inp_task_indicator = tf.placeholder(tf.int32, [None])
         self.inp_w = tf.placeholder(tf.float32, [None, num_dqns])
+
         inp_task_indicator_onehot = tf.one_hot(self.inp_task_indicator, num_tasks) #[bs, num_tasks]
         lmbda = 0.1
         #bs = tf.shape(self.inp_task_indicator)[0]
@@ -20,14 +21,18 @@ class Multi_DQN:
             all_Q = [self.build_network(f'qnet{i}') for i in range(num_dqns)] # [num_dqns, bs, num_actions]
             all_Q = tf.transpose(all_Q, [1,0,2]) # [bs, num_dqns, num_actions]
             self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1]) # [bs, num_actions]
+
             self.w = w = tf.get_variable('w', shape=[num_dqns, num_tasks])
+
             pre_selection = tf.reshape(w, [1, num_dqns, num_tasks]) * tf.reshape(inp_task_indicator_onehot, [-1, 1, num_tasks]) # [bs, num_dqns, num_tasks]
             selected_w = tf.reduce_sum(pre_selection, axis=2) # [bs, num_dqns]
             selected_Q_tildes = tf.reduce_sum(tf.reshape(selected_w, [-1, num_dqns, 1]) * all_Q, axis=1) # [bs, num_actions]
-            loss = tf.reduce_mean(tf.square(selected_Q_tildes - self.inp_target_q), axis=[0,1])
+            loss = tf.losses.huber_loss(self.inp_target_q, selected_Q_tildes)
+            loss = tf.reduce_mean(tf.reduce_sum(tf.square(selected_Q_tildes - self.inp_target_q), axis=1), axis=0)
             reg = tf.reduce_mean(tf.square(selected_w))
             self.loss = loss = loss + lmbda * reg
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
+            print(vars)
             self.train_op = tf.train.AdamOptimizer(learning_rate=0.00025).minimize(loss, var_list=vars)
             vars = tf.get_collection(tf.GraphKeys.VARIABLES, scope=scope.original_name_scope)
 
@@ -48,6 +53,10 @@ class Multi_DQN:
     def restore(self, path):
         self.saver.restore(self.sess, path)
 
+    def get_action_for_task(self, states, task_num):
+        W = self.sess.run(self.w)
+        w = W[:, task_num]
+        return self.get_action(states, w)
 
     def get_action(self, states, w):
 
@@ -55,7 +64,7 @@ class Multi_DQN:
             self.inp_s: states,
             self.inp_w: np.tile(np.reshape(w, [1, -1]), [len(states), 1])
         })
-        print('qs', qs)
+        #print('qs', qs)
         return np.argmax(qs, axis=1)
 
     def train(self, states, task_nums, target_qs):
@@ -69,8 +78,8 @@ class Multi_DQN:
 
     def build_network(self, name: str, reuse=None):
         with tf.variable_scope(name, reuse=reuse) as scope:
-            fc1 = tf.layers.dense(self.inp_s, 256, tf.nn.relu, name='fc1')
-            fc2 = tf.layers.dense(fc1, 256, tf.nn.relu, name='fc2')
+            fc1 = tf.layers.dense(self.inp_s, 512, tf.nn.relu, name='fc1')
+            fc2 = tf.layers.dense(fc1, 512, tf.nn.relu, name='fc2')
             qs = tf.layers.dense(fc2, self.action_size, name='qs')
         return qs
 

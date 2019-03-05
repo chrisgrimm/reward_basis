@@ -48,13 +48,13 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
         target_qs.append(target_q)
     return target_qs # [bs, num_actions]
 
-def visualize_behavior(task_num):
+def visualize_behavior(task_num, num_tasks, num_dqns):
     env = StuffWorld()
-    #tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
-    #tabular_agent.restore_q_values('./q_funcs/0')
+    tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
+    tabular_agent.restore_q_values('./q_funcs/0')
 
     env.set_goal_set(set(range(10)))
-    dqn = Multi_DQN(100, 10, env, 'multi_dqn')
+    dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
     dqn.restore('./multi_dqn.ckpt')
     #w = np.zeros([10], dtype=np.float32)
     #w[task_num] = 1.0
@@ -68,7 +68,7 @@ def visualize_behavior(task_num):
     #print(env.visual())
     while True:
         #a = env.human_mapping[input('a:')]
-        #print('tabular_qs', tabular_agent.get_Qs(s))
+        print('tabular_qs', tabular_agent.get_Qs(s))
 
         s = prepare_state_for_dqn(s)
         a = dqn.get_action([s], w)[0]
@@ -79,39 +79,56 @@ def visualize_behavior(task_num):
         input('------')
 
 def sample_goal_set():
-    return set([x for x in range(10) if np.random.uniform() < 0.5])
+    return set([x for x in range(2) if np.random.uniform() < 0.5])
+
+def sample_goal_num(num_tasks):
+    return np.random.randint(0, num_tasks)
+
+
+
+
 
 def do_run():
 
     num_tasks = 100
     num_dqns = 10
     train_freq = 4
-    min_buffer_size = 100
+    min_buffer_size = 1000
     save_interval = 100000
     dqn_path = './multi_dqn.ckpt'
     q_func_dir = './q_funcs'
     task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     task_names = task_names[:num_tasks]
+    task_sets = [set([int(x) for x in name]) for name in task_names]
     print(task_names)
     assert len(task_names) == num_tasks
 
     env = StuffWorld()
+    current_goal_num = sample_goal_num(num_tasks)
+    env.set_goal_set(task_sets[current_goal_num])
     paths = [os.path.join(q_func_dir, task_name) for task_name in task_names]
     #tables = async_load_q_tables(env, paths)
     tables = [load_q_table(env, path) for path in paths]
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
-    env.reset()
+    s = env.reset()
 
     for i in count():
-        a = np.random.randint(0, env.action_space.n)
+        if np.random.uniform() < 0.8:
+            #print(tables[0].get_Qs(s))
+            a = np.argmax(tables[0].get_Qs(s))
+            #print(a)
+        else:
+            a = np.random.randint(0, env.action_space.n)
         s, r, t, info = env.step(a)
         if t:
-            env.set_goal_set(sample_goal_set())
+            current_goal_num = sample_goal_num(num_tasks)
+            env.set_goal_set(task_sets[current_goal_num])
             s = env.reset()
-        state_buffer.append(s)
+        state_buffer.append((s, current_goal_num))
         if len(state_buffer) >= min_buffer_size and i % train_freq == 0:
-            states = sample(state_buffer, 32)
-            tasks = np.random.randint(0, num_tasks, size=[32])
+            states_and_tasks = sample(state_buffer, 32)
+            states, tasks = zip(*states_and_tasks)
+            #tasks = np.random.randint(0, num_tasks, size=[32])
             target_qs = build_target_q_batch(tables, states, tasks, env)
             #print(target_qs)
             preped_states = [prepare_state_for_dqn(state) for state in states]
@@ -128,4 +145,4 @@ if __name__ == '__main__':
     #q_func_dir = './q_funcs'
     #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     #print(task_names[:100])
-    #visualize_behavior(1)
+    #visualize_behavior(0, 100, 10)
