@@ -64,7 +64,7 @@ class Multi_DQN:
             self.inp_s: states,
             self.inp_w: np.tile(np.reshape(w, [1, -1]), [len(states), 1])
         })
-        #print('qs', qs)
+        print('qs', qs)
         return np.argmax(qs, axis=1)
 
     def train(self, states, task_nums, target_qs):

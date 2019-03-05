@@ -51,7 +51,7 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
 def visualize_behavior(task_num, num_tasks, num_dqns):
     env = StuffWorld()
     tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
-    tabular_agent.restore_q_values('./q_funcs/0')
+    tabular_agent.restore_q_values('./q_funcs/1')
 
     env.set_goal_set(set(range(10)))
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
@@ -90,7 +90,7 @@ def sample_goal_num(num_tasks):
 
 def do_run():
 
-    num_tasks = 100
+    num_tasks = 10
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 1000
@@ -100,6 +100,8 @@ def do_run():
     task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     task_names = task_names[:num_tasks]
     task_sets = [set([int(x) for x in name]) for name in task_names]
+    print(task_sets)
+    input('...')
     print(task_names)
     assert len(task_names) == num_tasks
 
@@ -110,6 +112,7 @@ def do_run():
     #tables = async_load_q_tables(env, paths)
     tables = [load_q_table(env, path) for path in paths]
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
+    dqn.restore('./multi_dqn.ckpt')
     s = env.reset()
 
     for i in count():
@@ -145,4 +148,4 @@ if __name__ == '__main__':
     #q_func_dir = './q_funcs'
     #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     #print(task_names[:100])
-    #visualize_behavior(0, 100, 10)
+    #visualize_behavior(1, 100, 10)
