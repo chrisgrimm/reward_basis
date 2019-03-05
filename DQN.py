@@ -22,17 +22,16 @@ class Multi_DQN:
         with tf.variable_scope(name, reuse=reuse) as scope:
             all_Q = [self.build_network(f'qnet{i}') for i in range(num_dqns)] # [num_dqns, bs, num_actions]
             all_Q = tf.transpose(all_Q, [1,0,2]) # [bs, num_dqns, num_actions]
-            if use_silencer:
-                silencer = self.build_silencing_network('silencer') # [bs, num_dqns]
-                all_Q = tf.reshape(silencer, [-1, num_dqns, 1]) * all_Q
-            self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1]) # [bs, num_actions]
+            self.Q_tilde_w = self.build_merge_network(all_Q, self.inp_w, 'merge_network')
+            #self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1]) # [bs, num_actions]
 
             self.w = w = tf.get_variable('w', shape=[num_dqns, num_tasks])
 
             pre_selection = tf.reshape(w, [1, num_dqns, num_tasks]) * tf.reshape(inp_task_indicator_onehot, [-1, 1, num_tasks]) # [bs, num_dqns, num_tasks]
             selected_w = tf.reduce_sum(pre_selection, axis=2) # [bs, num_dqns]
-            selected_Q_tildes = tf.reduce_sum(tf.reshape(selected_w, [-1, num_dqns, 1]) * all_Q, axis=1) # [bs, num_actions]
-            loss = tf.losses.huber_loss(self.inp_target_q, selected_Q_tildes)
+            selected_Q_tildes = self.build_merge_network(all_Q, selected_w, 'merge_network', reuse=True)
+            #selected_Q_tildes = tf.reduce_sum(tf.reshape(selected_w, [-1, num_dqns, 1]) * all_Q, axis=1) # [bs, num_actions]
+            #loss = tf.losses.huber_loss(self.inp_target_q, selected_Q_tildes)
             loss = tf.reduce_mean(tf.reduce_sum(tf.square(selected_Q_tildes - self.inp_target_q), axis=1), axis=0)
             reg = tf.reduce_mean(tf.square(selected_w))
             self.loss = loss = loss + lmbda * reg
@@ -80,6 +79,16 @@ class Multi_DQN:
         return loss
 
 
+    def build_merge_network(self, q_values, w_values, name, reuse=None):
+        # q_values : [bs, num_dqn, num_actions]
+        # w_values : [bs, num_dqn]
+        with tf.variable_scope(name, reuse=reuse):
+            inp_vector = tf.concat([tf.reshape(q_values, [-1, self.num_dqns * self.action_size]), w_values], axis=1) # [bs, num_dqn * num_actions + num_dqn]
+            fc1 = tf.layers.dense(inp_vector, 512, tf.nn.relu, name='fc1')
+            fc2 = tf.layers.dense(fc1, 512, tf.nn.relu, name='fc2')
+            qs = tf.layers.dense(fc2, self.action_size, name='qs')
+        return qs
+
 
     def build_network(self, name: str, reuse=None):
         with tf.variable_scope(name, reuse=reuse) as scope:
@@ -88,11 +97,6 @@ class Multi_DQN:
             qs = tf.layers.dense(fc2, self.action_size, name='qs')
         return qs
 
-    def build_silencing_network(self, name: str, reuse=None):
-        with tf.variable_scope(name, reuse=reuse) as scope:
-            fc1 = tf.layers.dense(self.inp_s, 512, tf.nn.relu, name='fc1')
-            fc2 = tf.layers.dense(fc1, 512, tf.nn.relu, name='fc2')
-            silencer = tf.layers.dense(fc2, self.num_dqns, tf.nn.sigmoid, name='qs') # [bs, num_dqns]
-        return silencer
+
 
 
