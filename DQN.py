@@ -4,9 +4,11 @@ import tensorflow as tf
 from gym import Env
 
 class Multi_DQN:
-    def __init__(self, num_tasks: int, num_dqns: int, env: Env, name: str, reuse=None):
+    def __init__(self, num_tasks: int, num_dqns: int, env: Env, name: str, reuse=None,
+                 use_silencer=False):
         assert len(env.observation_space.shape) == 1
         obs_size = env.observation_space.shape[0]
+        self.num_dqns = num_dqns
         self.action_size = action_size = env.action_space.n
         self.inp_s = tf.placeholder(tf.float32, [None, obs_size])
         self.inp_target_q = tf.placeholder(tf.float32, [None, action_size])
@@ -20,6 +22,9 @@ class Multi_DQN:
         with tf.variable_scope(name, reuse=reuse) as scope:
             all_Q = [self.build_network(f'qnet{i}') for i in range(num_dqns)] # [num_dqns, bs, num_actions]
             all_Q = tf.transpose(all_Q, [1,0,2]) # [bs, num_dqns, num_actions]
+            if use_silencer:
+                silencer = self.build_silencing_network('silencer') # [bs, num_dqns]
+                all_Q = tf.reshape(silencer, [-1, num_dqns, 1]) * all_Q
             self.Q_tilde_w = tf.reduce_sum(tf.reshape(self.inp_w, [-1, num_dqns, 1]) * all_Q, [1]) # [bs, num_actions]
 
             self.w = w = tf.get_variable('w', shape=[num_dqns, num_tasks])
@@ -82,5 +87,12 @@ class Multi_DQN:
             fc2 = tf.layers.dense(fc1, 512, tf.nn.relu, name='fc2')
             qs = tf.layers.dense(fc2, self.action_size, name='qs')
         return qs
+
+    def build_silencing_network(self, name: str, reuse=None):
+        with tf.variable_scope(name, reuse=reuse) as scope:
+            fc1 = tf.layers.dense(self.inp_s, 512, tf.nn.relu, name='fc1')
+            fc2 = tf.layers.dense(fc1, 512, tf.nn.relu, name='fc2')
+            silencer = tf.layers.dense(fc2, self.num_dqns, tf.nn.sigmoid, name='qs') # [bs, num_dqns]
+        return silencer
 
 

@@ -34,11 +34,11 @@ def async_load_q_tables(env, path_list):
     return q_tables
 
 
-def load_q_table(env: TabularEnv, path : str):
-    print(f'loading table for {path}...')
+def load_q_table(env: TabularEnv, path : str, table_number: int):
+    print(f'({table_number}) loading table for {path}...')
     learner = TabularQLearner(env.produce_q_table(), env.action_space.n)
     learner.restore_q_values(path)
-    print(f'finished loading {path}!')
+    print(f'({table_number}) finished loading {path}!')
     return learner
 
 def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env):
@@ -50,25 +50,26 @@ def build_target_q_batch(tables: List[TabularQLearner], states, tasks, env: Env)
 
 def visualize_behavior(task_num, num_tasks, num_dqns):
     env = StuffWorld()
-    tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
-    tabular_agent.restore_q_values('./q_funcs/1')
+    #tabular_agent = TabularQLearner(env.produce_q_table(), env.action_space.n)
+    #tabular_agent.restore_q_values('./q_funcs/1')
 
     env.set_goal_set(set(range(10)))
     dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
     dqn.restore('./multi_dqn.ckpt')
-    #w = np.zeros([10], dtype=np.float32)
-    #w[task_num] = 1.0
+    w = np.zeros([10], dtype=np.float32)
+    w[task_num] = 1.0
+    #w[4] = 1.0
     W = dqn.get_w()
     #for i in range(100):
     #    print(f'task {i}', W[:, i])
-    w = W[:,task_num]
-    print(w)
+    #w = W[:,task_num]
+    #print(w)
 
     s = env.reset()
     #print(env.visual())
     while True:
         #a = env.human_mapping[input('a:')]
-        print('tabular_qs', tabular_agent.get_Qs(s))
+        #print('tabular_qs', tabular_agent.get_Qs(s))
 
         s = prepare_state_for_dqn(s)
         a = dqn.get_action([s], w)[0]
@@ -110,8 +111,8 @@ def do_run():
     env.set_goal_set(task_sets[current_goal_num])
     paths = [os.path.join(q_func_dir, task_name) for task_name in task_names]
     #tables = async_load_q_tables(env, paths)
-    tables = [load_q_table(env, path) for path in paths]
-    dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
+    tables = [load_q_table(env, path, table_number) for table_number, path in enumerate(paths)]
+    dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn', use_silencer=True)
     s = env.reset()
 
     for i in count():
@@ -148,4 +149,4 @@ if __name__ == '__main__':
     #q_func_dir = './q_funcs'
     #task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     #print(task_names[:100])
-    #visualize_behavior(1, 100, 10)
+    #visualize_behavior(9, 100, 10)
