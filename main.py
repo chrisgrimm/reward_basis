@@ -90,7 +90,7 @@ def sample_goal_num(num_tasks):
 
 def do_run():
 
-    num_tasks = 2
+    num_tasks = 100
     num_dqns = 10
     train_freq = 4
     min_buffer_size = 1000
@@ -111,7 +111,7 @@ def do_run():
     paths = [os.path.join(q_func_dir, task_name) for task_name in task_names]
     #tables = async_load_q_tables(env, paths)
     tables = [load_q_table(env, path) for path in paths]
-    dqn = Multi_DQN(100, num_dqns, env, 'multi_dqn')
+    dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
     dqn.restore('./multi_dqn.ckpt')
     s = env.reset()
 
@@ -131,7 +131,7 @@ def do_run():
         if len(state_buffer) >= min_buffer_size and i % train_freq == 0:
             states_and_tasks = sample(state_buffer, 32)
             states, tasks = zip(*states_and_tasks)
-            print(tasks)
+            #print(tasks)
             #tasks = np.random.randint(0, num_tasks, size=[32])
             target_qs = build_target_q_batch(tables, states, tasks, env)
             #print(target_qs)

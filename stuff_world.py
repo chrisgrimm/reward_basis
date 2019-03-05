@@ -51,6 +51,8 @@ class StuffWorld(TabularEnv):
         self.remaining = self.goal_set.copy()
         self.action_space = Discrete(4)
         self.observation_space = Box(0, 1, shape=[self.width*self.height + 2])
+        self.max_steps = 1000
+        self.step_num = 0
 
     def pair_to_idx(self, x, y):
         return y * self.height + x
@@ -116,6 +118,10 @@ class StuffWorld(TabularEnv):
             t = True
         else:
             t = False
+        if self.step_num >= self.max_steps:
+            t = True
+        else:
+            self.step_num += 1
         return self.generate_obs(), r, t, dict()
 
     def reset(self):
@@ -123,6 +129,7 @@ class StuffWorld(TabularEnv):
             self.stuff_locations[stuff] = (True, stuff_num)
         self.agent_location = (5,5)
         self.remaining = self.goal_set.copy()
+        self.step_num = 0
         return self.generate_obs()
 
 
