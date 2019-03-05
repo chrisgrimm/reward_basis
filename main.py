@@ -100,9 +100,9 @@ def do_run():
     task_names = sorted([f for f in os.listdir(q_func_dir) if f.isnumeric()], key=task_sort_key)
     task_names = task_names[:num_tasks]
     task_sets = [set([int(x) for x in name]) for name in task_names]
-    print(task_sets)
-    input('...')
-    print(task_names)
+    #print(task_sets)
+    #input('...')
+    #print(task_names)
     assert len(task_names) == num_tasks
 
     env = StuffWorld()
@@ -111,7 +111,7 @@ def do_run():
     paths = [os.path.join(q_func_dir, task_name) for task_name in task_names]
     #tables = async_load_q_tables(env, paths)
     tables = [load_q_table(env, path) for path in paths]
-    dqn = Multi_DQN(num_tasks, num_dqns, env, 'multi_dqn')
+    dqn = Multi_DQN(100, num_dqns, env, 'multi_dqn')
     dqn.restore('./multi_dqn.ckpt')
     s = env.reset()
 
